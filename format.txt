@@ -1,3 +1,9 @@
+User:
+[
+    "id": "000",
+    "has_labels": ...
+]
+
 [
     {
         "UserID": "000",
@@ -6,7 +12,6 @@
                 "ActivityID": "20081023025304",
                 "TrackPoints": [
                     {
-                        "TrackPointID": ...,
                         "lat": ...,
                         "lon": ...,
                         "altitude": ...,
