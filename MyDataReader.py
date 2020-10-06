@@ -1,5 +1,6 @@
 import os
 
+from numpy import double
 from numpy.core import long
 
 
@@ -50,9 +51,9 @@ class MyDataReader:
                                             lat, lon, _, altitude, date_days, date, time = l.split(",")
                                             trackpoint_dict = {
                                                 "activity_id": int(filename.split(".")[0]),
-                                                "lat": lat,
-                                                "lon": lon,
-                                                "altitude": altitude,
+                                                "lat": float(lat),
+                                                "lon": float(lon),
+                                                "altitude": round(float(altitude)),
                                                 "date_days": date_days,
                                                 "date_time": (date + " " + time).strip(),
                                             }

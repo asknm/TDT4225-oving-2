@@ -59,7 +59,7 @@ class ExampleProgram:
         self.db_connection.commit()
 
     def insert_trackpoint_data(self, data):
-        query = """INSERT INTO trackpoint VALUES (%(activity_id)s, %(lat)s, %(lon)s
+        query = """INSERT INTO trackpoint (activity_id, lat, lon, altitude, date_days, date_time) VALUES (%(activity_id)s, %(lat)s, %(lon)s,
                 %(altitude)s, %(date_days)s, %(date_time)s)
         """
         self.cursor.executemany(query, data)
@@ -100,7 +100,11 @@ def main():
         users, activities, trackpoints = data_reader.read()
         program.insert_user_data(users)
         program.insert_activity_data(activities)
-        program.insert_trackpoint_data(trackpoints)
+        #program.insert_trackpoint_data(trackpoints)
+        for i in range(20000, len(trackpoints), 20000):
+            print(str(100*i/len(trackpoints)) + " %")
+            program.insert_trackpoint_data(trackpoints[i-20000:i])
+        program.insert_trackpoint_data(trackpoints[i:])
         _ = program.fetch_data(table_name="user")
     except Exception as e:
         print("ERROR: Failed to use database:", e)
