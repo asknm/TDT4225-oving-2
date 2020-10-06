@@ -1,0 +1,24 @@
+[
+    {
+        "UserID": "000",
+        "Activities": [
+            {
+                "ActivityID": "20081023025304",
+                "TrackPoints": [
+                    {
+                        "TrackPointID": ...,
+                        "lat": ...,
+                        "lon": ...,
+                        "altitude": ...,
+                        "date": ...,
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "UserID": 001
+        "Activities": ...
+    },
+    ...
+]
