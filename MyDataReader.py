@@ -43,7 +43,7 @@ class MyDataReader:
                                 for j, l in enumerate(file):
                                     pass
                             # Reads data from file if it is not too long
-                            if j < 2500:
+                            if j < 2506:
                                 with open(os.path.join(complete_subdir, filename), "r") as file:
                                     for j, l in enumerate(file):
                                         if j > 6:
@@ -58,14 +58,14 @@ class MyDataReader:
                                             }
                                             trackpoints.append(trackpoint_dict)
 
-                            activity_dict = {
-                                "id": int(filename.split(".")[0]),
-                                "user_id": subdirname,
-                                "transportation_mode": None,
-                                "start_date_time": None,
-                                "end_date_time": None,
-                            }
-                            activities.append(activity_dict)
+                                activity_dict = {
+                                    "id": int(filename.split(".")[0]),
+                                    "user_id": subdirname,
+                                    "transportation_mode": None,
+                                    "start_date_time": None,
+                                    "end_date_time": None,
+                                }
+                                activities.append(activity_dict)
 
                     user_dict = {
                         "id": subdirname,
