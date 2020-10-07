@@ -10,11 +10,11 @@ def find_labels(path):
         with open(path + "\\labels.txt") as file:
             for i, l in enumerate(file):
                 if i > 0:
-                    start_date, start_time, end_date, end_time, tranportation_mode = l.split()
+                    start_date, start_time, end_date, end_time, transportation_mode = l.split()
                     label_dict = {
                         "start_date_time": start_date.replace("/", "-") + " " + start_time,
                         "end_date_time": end_date.replace("/", "-") + " " + end_time,
-                        "transportation_mode": tranportation_mode,
+                        "transportation_mode": transportation_mode,
                     }
                     labels.append(label_dict)
         return True, labels
@@ -46,7 +46,8 @@ class MyDataReader:
                             # Reads data from file if it is not too long
                             start_date_time = None
                             end_date_time = None
-                            if j < 2506:
+                            transportation_mode = None
+                            if j < 10:
                                 with open(os.path.join(complete_subdir, filename), "r") as file:
                                     for k, l in enumerate(file):
                                         # Changed j to k
@@ -66,11 +67,14 @@ class MyDataReader:
                                                 start_date_time = (date + " " + time).strip()
                                             elif k == j:
                                                 end_date_time = (date + " " + time).strip()
-
+                                for label in labels:
+                                    if label["start_date_time"] == start_date_time and \
+                                            label["end_date_time"] == end_date_time:
+                                        transportation_mode = label["transportation_mode"]
                                 activity_dict = {
                                     "id": int(filename.split(".")[0]),
                                     "user_id": subdirname,
-                                    "transportation_mode": None,
+                                    "transportation_mode": transportation_mode,
                                     "start_date_time": start_date_time,
                                     "end_date_time": end_date_time,
                                 }
