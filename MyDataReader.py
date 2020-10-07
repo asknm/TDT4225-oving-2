@@ -44,10 +44,13 @@ class MyDataReader:
                                 for j, l in enumerate(file):
                                     pass
                             # Reads data from file if it is not too long
+                            start_date_time = None
+                            end_date_time = None
                             if j < 2506:
                                 with open(os.path.join(complete_subdir, filename), "r") as file:
-                                    for j, l in enumerate(file):
-                                        if j > 6:
+                                    for k, l in enumerate(file):
+                                        # Changed j to k
+                                        if k > 5:
                                             lat, lon, _, altitude, date_days, date, time = l.split(",")
                                             trackpoint_dict = {
                                                 "activity_id": int(filename.split(".")[0]),
@@ -59,12 +62,17 @@ class MyDataReader:
                                             }
                                             trackpoints.append(trackpoint_dict)
 
+                                            if k == 6:
+                                                start_date_time = (date + " " + time).strip()
+                                            elif k == j:
+                                                end_date_time = (date + " " + time).strip()
+
                                 activity_dict = {
                                     "id": int(filename.split(".")[0]),
                                     "user_id": subdirname,
                                     "transportation_mode": None,
-                                    "start_date_time": None,
-                                    "end_date_time": None,
+                                    "start_date_time": start_date_time,
+                                    "end_date_time": end_date_time,
                                 }
                                 activities.append(activity_dict)
 
