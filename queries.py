@@ -1,4 +1,4 @@
-from MyDataReader import MyDataReader
+# from MyDataReader import MyDataReader
 from DbConnector import DbConnector
 from tabulate import tabulate
 
@@ -28,7 +28,7 @@ class Program:
         self.cursor.execute(query % table_name)
         self.db_connection.commit()
 
-    def trackpoint_table(self,table_name):
+    def trackpoint_table(self, table_name):
         query = """CREATE TABLE IF NOT EXISTS %s (
                            id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
                            activity_id VARCHAR(4) NOT NULL FOREIGN KEY,
@@ -87,13 +87,12 @@ class Program:
 
     ### task 2
     # 1
-    def count_all(self,table_name):
+    def count_all(self, table_name):
         query = """ SELECT COUNT(*) FROM %s;"""
         self.cursor.execute(query)
         count = self.cursor.fetchall()
         print("Count of " % table_name)
         print(count)
-
 
     # 2
     def agerage_activities(self):
@@ -114,8 +113,7 @@ class Program:
 
     # 4
     def taxi_users(self):
-        query = """SELECT * FROM Activity WHERE Activity.id;""" # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
-
+        query = """SELECT * FROM Activity WHERE Activity.id;"""  # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
 
     # 5
     def all_transportations(self):
@@ -125,30 +123,78 @@ class Program:
         print("Transportation modes and counts:")
         print(res)
 
-    # 6
-    def most_active_year(self):
-        query = """SELECT LEFT(..., 4) AS INT FROM activity ORDER BY ... COUNT(*) DESC limit 1;"""
+    # 6a)
+    def most_active_year_by_activity_count(self):
+        query = """SELECT YEAR(start_date_time) as year
+                FROM activity
+                GROUP BY year
+                ORDER BY COUNT(id) DESC
+                LIMIT 1;"""
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Most active year by activity count:")
+        print(res)
+
+    # 6b)
+    def most_active_year_by_hours(self):
+        query = """SELECT YEAR(start_date_time) as year, SUM(HOUR(TIMEDIFF(start_date_time, end_date_time))) AS hours
+                FROM activity
+                GROUP BY year
+                ORDER BY hours DESC;"""
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Most active year by hours logged:")
+        print(res)
+
+    # 9
+    def find_invalid_activities(self):
+        query = """SELECT user_id, COUNT(activity_id)
+                FROM (activity as a JOIN 
+                (SELECT DISTINCT tp1.activity_id
+                FROM trackpoint AS tp1 JOIN trackpoint AS tp2 ON tp1.activity_id = tp2.activity_id 
+                WHERE TIMESTAMPDIFF(MINUTE, tp1.date_time, tp2.date_time) >= 5 AND (tp1.id + 1) = tp2.id)
+                AS invalids ON a.id = invalids.activity_id)
+                GROUP BY a.user_id
+                ORDER BY COUNT(activity_id) DESC;"""
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Users with invalid activities:")
+        print(res)
+
+    # 10
+    def activities_in_forbidden_city(self):
+        query = """SELECT DISTINCT user.id 
+                FROM user 
+                INNER JOIN activity on activity.user_id=user.id 
+                INNER JOIN trackpoint on trackpoint.activity_id=activity.id
+                WHERE ROUND(trackpoint.lat, 2)=39.92 AND ROUND(trackpoint.lon, 2)=116.40;"""
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Users that have activities in The Forbidden City:")
+        print(res)
+
 
 def main():
+    program = None
     try:
         program = Program()
-        program.all_transportations()
+        program.activities_in_forbidden_city()
 
         # data_reader = myDataReader();
         # users, activities, trackpoints = data_reader.read()
         # program.count_all(table_name="User")
         # program.count_all(table_name="Activity")
         # program.count_all(table_name="TrackPoint")
-        #program.user_table(table_name="User")
-        #program.activity_table(table_name="Activity")
-        #program.trackpoint_table(table_name="TrackPoint")
-        #program.insert_data(table_name="User")
+        # program.user_table(table_name="User")
+        # program.activity_table(table_name="Activity")
+        # program.trackpoint_table(table_name="TrackPoint")
+        # program.insert_data(table_name="User")
         # _ = program.fetch_data(table_name="User")
-        #program.drop_table(table_name="User")
-        #program.drop_table(table_name="Activity")
-        #program.drop_table(table_name="TrackPoint")
+        # program.drop_table(table_name="User")
+        # program.drop_table(table_name="Activity")
+        # program.drop_table(table_name="TrackPoint")
         # Check that the table is dropped
-        #program.show_tables()
+        # program.show_tables()
     except Exception as e:
         print("ERROR: Failed to use database:", e)
     finally:
