@@ -155,33 +155,6 @@ class Program:
         print("Most active year by hours logged:")
         print(res)
 
-    # 9
-    def find_invalid_activities(self):
-        query = """SELECT user_id, COUNT(activity_id)
-                FROM (activity as a JOIN 
-                (SELECT DISTINCT tp1.activity_id
-                FROM trackpoint AS tp1 JOIN trackpoint AS tp2 ON tp1.activity_id = tp2.activity_id 
-                WHERE TIMESTAMPDIFF(MINUTE, tp1.date_time, tp2.date_time) >= 5 AND (tp1.id + 1) = tp2.id)
-                AS invalids ON a.id = invalids.activity_id)
-                GROUP BY a.user_id
-                ORDER BY COUNT(activity_id) DESC;"""
-        self.cursor.execute(query)
-        res = self.cursor.fetchall()
-        print("Users with invalid activities:")
-        print(res)
-
-    # 10
-    def activities_in_forbidden_city(self):
-        query = """SELECT DISTINCT user.id 
-                FROM user 
-                INNER JOIN activity on activity.user_id=user.id 
-                INNER JOIN trackpoint on trackpoint.activity_id=activity.id
-                WHERE ROUND(trackpoint.lat, 2)=39.92 AND ROUND(trackpoint.lon, 2)=116.40;"""
-        self.cursor.execute(query)
-        res = self.cursor.fetchall()
-        print("Users that have activities in The Forbidden City:")
-        print(res)
-
     # 7
     def user_112_distance_walked_2008(self):
         query = """
@@ -236,6 +209,33 @@ class Program:
         print("Top 20 altitude gainers:")
         print(res)
 
+    # 9
+    def find_invalid_activities(self):
+        query = """SELECT user_id, COUNT(activity_id)
+                FROM (activity as a JOIN 
+                (SELECT DISTINCT tp1.activity_id
+                FROM trackpoint AS tp1 JOIN trackpoint AS tp2 ON tp1.activity_id = tp2.activity_id 
+                WHERE TIMESTAMPDIFF(MINUTE, tp1.date_time, tp2.date_time) >= 5 AND (tp1.id + 1) = tp2.id)
+                AS invalids ON a.id = invalids.activity_id)
+                GROUP BY a.user_id
+                ORDER BY COUNT(activity_id) DESC;"""
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Users with invalid activities:")
+        print(res)
+
+    # 10
+    def activities_in_forbidden_city(self):
+        query = """SELECT DISTINCT user.id 
+                FROM user 
+                INNER JOIN activity on activity.user_id=user.id 
+                INNER JOIN trackpoint on trackpoint.activity_id=activity.id
+                WHERE ROUND(trackpoint.lat, 2)=39.92 AND ROUND(trackpoint.lon, 2)=116.40;"""
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Users that have activities in The Forbidden City:")
+        print(res)
+        
     # 11
     def transportation_mode_users(self):
         query = """
