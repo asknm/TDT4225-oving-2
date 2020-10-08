@@ -119,7 +119,11 @@ class Program:
 
     # 5
     def all_transportations(self):
-        query = """SELECT * FROM User ORDER BY Activities DESC limit 20;""" # trenger labeled_ids.txt
+        query = """SELECT transportation_mode, count(transportation_mode) FROM activity WHERE transportation_mode IS NOT NULL GROUP BY transportation_mode;"""
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Transportation modes and counts:")
+        print(res)
 
     # 6
     def most_active_year(self):
@@ -128,7 +132,7 @@ class Program:
 def main():
     try:
         program = Program()
-        program.agerage_activities()
+        program.all_transportations()
 
         # data_reader = myDataReader();
         # users, activities, trackpoints = data_reader.read()
