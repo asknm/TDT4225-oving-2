@@ -195,12 +195,37 @@ class Program:
 
     # 11
     def transportation_mode_users(self):
-        pass
+        query = """
+        SELECT b.user_id, MAX(c.transportation_mode) AS most_used_tranportation_mode
+        FROM (
+            SELECT user_id, MAX(count) AS max
+            FROM (
+                SELECT user_id, transportation_mode, COUNT(*) AS count
+                FROM activity
+                WHERE transportation_mode IS NOT NULL
+                GROUP BY user_id, transportation_mode
+                ORDER BY user_id
+            ) AS a
+            GROUP BY user_id
+        ) AS b
+        INNER JOIN (
+            SELECT user_id, transportation_mode, COUNT(*) AS count
+            FROM activity
+            WHERE transportation_mode IS NOT NULL
+            GROUP BY user_id, transportation_mode
+            ORDER BY user_id
+        ) AS c ON b.user_id = c.user_id AND b.max = c.count
+        GROUP BY user_id;
+        """
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Most user transportation modes:")
+        print(res)
 
 def main():
     try:
         program = Program()
-        program.top_20_altitude()
+        program.transportation_mode_users()
 
         # data_reader = myDataReader();
         # users, activities, trackpoints = data_reader.read()
