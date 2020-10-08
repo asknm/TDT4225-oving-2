@@ -109,12 +109,16 @@ class Program:
         query = """SELECT user_id FROM activity GROUP BY user_id ORDER BY COUNT(*) DESC limit 20;"""
         self.cursor.execute(query)
         count = self.cursor.fetchall()
-        print("Average activities for each user:")
+        print("Top twenty users:")
         print(count)
 
     # 4
     def taxi_users(self):
-        query = """SELECT * FROM Activity WHERE Activity.id;""" # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
+        query = """SELECT user.id FROM activity WHERE transportation_mode = 'taxi' GROUP BY user.id;""" # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
+        self.cursor.execute(query)
+        count = self.cursor.fetchall()
+        print("Top taxi users:")
+        print(count)
 
 
     # 5
@@ -128,6 +132,10 @@ class Program:
     # 6
     def most_active_year(self):
         query = """SELECT LEFT(..., 4) AS INT FROM activity ORDER BY ... COUNT(*) DESC limit 1;"""
+
+    # 11
+    def transportation_mode_users(self):
+
 
 def main():
     try:
