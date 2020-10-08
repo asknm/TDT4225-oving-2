@@ -110,12 +110,16 @@ class Program:
         query = """SELECT user_id FROM activity GROUP BY user_id ORDER BY COUNT(*) DESC limit 20;"""
         self.cursor.execute(query)
         count = self.cursor.fetchall()
-        print("Average activities for each user:")
+        print("Top twenty users:")
         print(count)
 
     # 4
     def taxi_users(self):
-        query = """SELECT * FROM Activity WHERE Activity.id;""" # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
+        query = """SELECT user.id FROM activity WHERE transportation_mode = 'taxi' GROUP BY user.id;""" # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
+        self.cursor.execute(query)
+        count = self.cursor.fetchall()
+        print("Top taxi users:")
+        print(count)
 
 
     # 5
@@ -154,6 +158,10 @@ class Program:
                 distance += haversine((l[1], l[2]), (res[i-1][1], res[i-1][2]))
         print("Total distance:")
         print(distance)
+
+
+    # 11
+    def transportation_mode_users(self):
 
 
 def main():
