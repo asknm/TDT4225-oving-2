@@ -159,6 +159,39 @@ class Program:
         print("Total distance:")
         print(distance)
 
+    # 8
+    def top_20_altitude(self):
+        query = """SET @last_altitude = 99999"""
+        self.cursor.execute(query)
+        query = """SET @last_activity_id = -1"""
+        self.cursor.execute(query)
+        query = """
+        SELECT *
+        FROM (
+            SELECT a.user_id, SUM(t.altitude_gain) AS total_gain
+            FROM (
+                SELECT
+                activity_id,
+                IF(altitude > @last_altitude, altitude-@last_altitude, 0.0) AS altitude_gain,
+                activity_id = @last_activity_id as same_activity,
+                @last_altitude := altitude,
+                @last_activity_id := activity_id
+                FROM trackpoint
+                WHERE altitude != -777
+                AND @last_altitude != -777
+            ) AS t
+            INNER JOIN activity AS a ON t.activity_id = a.id
+            WHERE t.same_activity
+            GROUP BY a.user_id
+        ) AS u
+        ORDER BY u.total_gain DESC
+        LIMIT 20
+        ;
+        """
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Top 20 altitude gainers:")
+        print(res)
 
     # 11
     def transportation_mode_users(self):
@@ -167,7 +200,7 @@ class Program:
 def main():
     try:
         program = Program()
-        program.user_112_distance_walked_2008()
+        program.top_20_altitude()
 
         # data_reader = myDataReader();
         # users, activities, trackpoints = data_reader.read()
