@@ -86,6 +86,7 @@ class Program:
         print(tabulate(rows, headers=self.cursor.column_names))
 
     ### task 2
+    # 1
     def count_all(self,table_name):
         query = """ SELECT COUNT(*) FROM %s;"""
         self.cursor.execute(query)
@@ -94,13 +95,16 @@ class Program:
         print(count)
 
 
+    # 2
     def agerage_activities(self):
-        query = """ SELECT COUNT(activity.id)/COUNT(user.id) FROM activity, user;"""
+        query = """ SELECT (SELECT COUNT(*) FROM activity)/(SELECT COUNT(*) FROM user);"""
+        # query = """ SELECT COUNT(activity.id)/COUNT(user.id) FROM activity, user;"""
         self.cursor.execute(query)
         count = self.cursor.fetchall()
         print("Average activities for each user:")
         print(count)
 
+    # 3
     def top_twenty_users(self):
         query = """SELECT user_id FROM activity GROUP BY user_id ORDER BY COUNT(*) DESC limit 20;"""
         self.cursor.execute(query)
@@ -108,22 +112,26 @@ class Program:
         print("Average activities for each user:")
         print(count)
 
+    # 4
     def taxi_users(self):
         query = """SELECT * FROM Activity WHERE Activity.id;""" # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
 
 
+    # 5
     def all_transportations(self):
         query = """SELECT * FROM User ORDER BY Activities DESC limit 20;""" # trenger labeled_ids.txt
 
+    # 6
     def most_active_year(self):
         query = """SELECT LEFT(..., 4) AS INT FROM activity ORDER BY ... COUNT(*) DESC limit 1;"""
 
 def main():
-    program = None
     try:
         program = Program()
-        data_reader = myDataReader();
-        users, activities, trackpoints = data_reader.read()
+        program.agerage_activities()
+
+        # data_reader = myDataReader();
+        # users, activities, trackpoints = data_reader.read()
         # program.count_all(table_name="User")
         # program.count_all(table_name="Activity")
         # program.count_all(table_name="TrackPoint")

@@ -87,34 +87,34 @@ class ExampleProgram:
 
 
 def main():
-    program = None
-    data_reader = MyDataReader()
-    users, activities, trackpoints = data_reader.read()
-    print(activities)
-    # try:
-    #     program = ExampleProgram()
-    #     # program.drop_table(table_name="user")
-    #     # program.drop_table(table_name="activity")
-    #     # program.drop_table(table_name="trackpoint")
-    #     # program.create_user_table(table_name="user")
-    #     # program.create_activity_table(table_name="activity")
-    #     # program.create_trackpoint_table(table_name="trackpoint")
-    #     data_reader = MyDataReader()
-    #     users, activities, trackpoints = data_reader.read()
-    #     print(activities)
-    #     # program.insert_user_data(users)
-    #     # program.insert_activity_data(activities)
-    #     #program.insert_trackpoint_data(trackpoints)
-    #     # for i in range(20000, len(trackpoints), 20000):
-    #     #     print(str(100*i/len(trackpoints)) + " %")
-    #     #     program.insert_trackpoint_data(trackpoints[i-20000:i])
-    #     # program.insert_trackpoint_data(trackpoints[i:])
-    #     # _ = program.fetch_data(table_name="user")
-    # except Exception as e:
-    #     print("ERROR: Failed to use database:", e)
-    # finally:
-    #     if program:
-    #         program.connection.close_connection()
+    # program = None
+    # data_reader = MyDataReader()
+    # users, activities, trackpoints = data_reader.read()
+    # print(activities)
+    try:
+        program = ExampleProgram()
+        program.drop_table(table_name="user")
+        program.drop_table(table_name="activity")
+        program.drop_table(table_name="trackpoint")
+        program.create_user_table(table_name="user")
+        program.create_activity_table(table_name="activity")
+        program.create_trackpoint_table(table_name="trackpoint")
+        data_reader = MyDataReader()
+        users, activities, trackpoints = data_reader.read()
+        print(activities)
+        program.insert_user_data(users)
+        program.insert_activity_data(activities)
+        # program.insert_trackpoint_data(trackpoints)
+        for i in range(20000, len(trackpoints), 20000):
+            print(str(100*i/len(trackpoints)) + " %")
+            program.insert_trackpoint_data(trackpoints[i-20000:i])
+        program.insert_trackpoint_data(trackpoints[i:])
+        _ = program.fetch_data(table_name="user")
+    except Exception as e:
+        print("ERROR: Failed to use database:", e)
+    finally:
+        if program:
+            program.connection.close_connection()
 
 
 if __name__ == '__main__':

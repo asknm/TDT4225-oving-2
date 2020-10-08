@@ -47,7 +47,7 @@ class MyDataReader:
                             start_date_time = None
                             end_date_time = None
                             transportation_mode = None
-                            if j < 10:
+                            if j < 2506:
                                 with open(os.path.join(complete_subdir, filename), "r") as file:
                                     for k, l in enumerate(file):
                                         # Changed j to k
