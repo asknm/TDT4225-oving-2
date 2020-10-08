@@ -1,6 +1,7 @@
-# from MyDataReader import MyDataReader
+from MyDataReader import MyDataReader
 from DbConnector import DbConnector
 from tabulate import tabulate
+from haversine import haversine, Unit
 
 
 class Program:
@@ -9,35 +10,39 @@ class Program:
         self.db_connection = self.connection.db_connection
         self.cursor = self.connection.cursor
 
-    def user_table(self, table_name):
+    def create_user_table(self, table_name):
         query = """CREATE TABLE IF NOT EXISTS %s (
-                           id VARCHAR(4) AUTO_INCREMENT NOT NULL PRIMARY KEY,
-                           has_labels TINYINT(1))
-                        """
+                id VARCHAR(50) NOT NULL PRIMARY KEY,
+                has_labels BOOLEAN)
+                """
+        # This adds table_name to the %s variable and executes the query
         self.cursor.execute(query % table_name)
         self.db_connection.commit()
 
-    def activity_table(self, table_name):
+    def create_activity_table(self, table_name):
         query = """CREATE TABLE IF NOT EXISTS %s (
-                           id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-                           user_id VARCHAR(4) NOT NULL FOREIGN KEY,
-                           start_date_time DATETIME ,
-                           end_date_time DATETIME,
-                           PRIMARY KEY (id, user_id))
-                        """
+                id BIGINT UNSIGNED NOT NULL,
+                user_id VARCHAR(50) NOT NULL references user(id),
+                transportation_mode VARCHAR(20),
+                start_date_time DATETIME,
+                end_date_time DATETIME,
+                PRIMARY KEY (id, user_id))
+                """
+        # This adds table_name to the %s variable and executes the query
         self.cursor.execute(query % table_name)
         self.db_connection.commit()
 
-    def trackpoint_table(self, table_name):
+    def create_trackpoint_table(self, table_name):
         query = """CREATE TABLE IF NOT EXISTS %s (
-                           id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-                           activity_id VARCHAR(4) NOT NULL FOREIGN KEY,
-                           lat DOUBLE,
-                           lon DOUBLE,
-                           altitude INT,
-                           date_days DOUBLE,
-                           date_time DATETIME 
-                        """
+                id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                activity_id BIGINT UNSIGNED NOT NULL references activity(id),
+                lat DOUBLE,
+                lon DOUBLE,
+                altitude INT,
+                date_days DOUBLE,
+                date_time DATETIME)
+                """
+        # This adds table_name to the %s variable and executes the query
         self.cursor.execute(query % table_name)
         self.db_connection.commit()
 
@@ -54,7 +59,7 @@ class Program:
         self.db_connection.commit()
 
     def insert_trackpoint_data(self, data):
-        query = """INSERT INTO trackpoint VALUES (%(activity_id)s, %(lat)s, %(lon)s
+        query = """INSERT INTO trackpoint (activity_id, lat, lon, altitude, date_days, date_time) VALUES (%(activity_id)s, %(lat)s, %(lon)s,
                 %(altitude)s, %(date_days)s, %(date_time)s)
         """
         self.cursor.executemany(query, data)
@@ -80,11 +85,6 @@ class Program:
         self.cursor.execute("SHOW TABLES")
         rows = self.cursor.fetchall()
 
-    def show_tables(self):
-        self.cursor.execute("SHOW TABLES")
-        rows = self.cursor.fetchall()
-        print(tabulate(rows, headers=self.cursor.column_names))
-
     ### task 2
     # 1
     def count_all(self, table_name):
@@ -108,16 +108,25 @@ class Program:
         query = """SELECT user_id FROM activity GROUP BY user_id ORDER BY COUNT(*) DESC limit 20;"""
         self.cursor.execute(query)
         count = self.cursor.fetchall()
-        print("Average activities for each user:")
+        print("Top twenty users:")
         print(count)
 
     # 4
     def taxi_users(self):
-        query = """SELECT * FROM Activity WHERE Activity.id;"""  # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
+        query = """SELECT user.id FROM activity WHERE transportation_mode = 'taxi' GROUP BY user.id;"""  # hvis id finnes i labeled_ids.txt, hvordan er dette lagt inn i tabellen?
+        self.cursor.execute(query)
+        count = self.cursor.fetchall()
+        print("Top taxi users:")
+        print(count)
 
     # 5
     def all_transportations(self):
-        query = """SELECT transportation_mode, count(transportation_mode) FROM activity WHERE transportation_mode IS NOT NULL GROUP BY transportation_mode;"""
+        query = """
+        SELECT transportation_mode, count(transportation_mode)
+        FROM activity
+        WHERE transportation_mode IS NOT NULL
+        GROUP BY transportation_mode;
+        """
         self.cursor.execute(query)
         res = self.cursor.fetchall()
         print("Transportation modes and counts:")
@@ -173,33 +182,121 @@ class Program:
         print("Users that have activities in The Forbidden City:")
         print(res)
 
+    # 7
+    def user_112_distance_walked_2008(self):
+        query = """
+        SELECT t.activity_id, t.lat, t.lon, t.altitude
+        FROM trackpoint AS t
+        INNER JOIN activity AS a ON t.activity_id=a.id
+        WHERE YEAR(a.start_date_time) = 2008
+        AND a.user_id = '112'
+        AND a.transportation_mode = 'walk'
+        ORDER BY t.activity_id;
+        """
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        distance = 0.0
+        for i, l in enumerate(res):
+            if i > 0 and l[0] == res[i - 1][0]:
+                distance += haversine((l[1], l[2]), (res[i - 1][1], res[i - 1][2]))
+        print("Total distance:")
+        print(distance)
 
-def main():
-    program = None
+    # 8
+    def top_20_altitude(self):
+        query = """SET @last_altitude = 99999"""
+        self.cursor.execute(query)
+        query = """SET @last_activity_id = -1"""
+        self.cursor.execute(query)
+        query = """
+        SELECT *
+        FROM (
+            SELECT a.user_id, SUM(t.altitude_gain) AS total_gain
+            FROM (
+                SELECT
+                activity_id,
+                IF(altitude > @last_altitude, altitude-@last_altitude, 0.0) AS altitude_gain,
+                activity_id = @last_activity_id as same_activity,
+                @last_altitude := altitude,
+                @last_activity_id := activity_id
+                FROM trackpoint
+                WHERE altitude != -777
+                AND @last_altitude != -777
+            ) AS t
+            INNER JOIN activity AS a ON t.activity_id = a.id
+            WHERE t.same_activity
+            GROUP BY a.user_id
+        ) AS u
+        ORDER BY u.total_gain DESC
+        LIMIT 20
+        ;
+        """
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Top 20 altitude gainers:")
+        print(res)
+
+    # 11
+    def transportation_mode_users(self):
+        query = """
+        SELECT b.user_id, MAX(c.transportation_mode) AS most_used_tranportation_mode
+        FROM (
+            SELECT user_id, MAX(count) AS max
+            FROM (
+                SELECT user_id, transportation_mode, COUNT(*) AS count
+                FROM activity
+                WHERE transportation_mode IS NOT NULL
+                GROUP BY user_id, transportation_mode
+                ORDER BY user_id
+            ) AS a
+            GROUP BY user_id
+        ) AS b
+        INNER JOIN (
+            SELECT user_id, transportation_mode, COUNT(*) AS count
+            FROM activity
+            WHERE transportation_mode IS NOT NULL
+            GROUP BY user_id, transportation_mode
+            ORDER BY user_id
+        ) AS c ON b.user_id = c.user_id AND b.max = c.count
+        GROUP BY user_id;
+        """
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        print("Most user transportation modes:")
+        print(res)
+
+
+def build_database():
     try:
         program = Program()
-        program.activities_in_forbidden_city()
-
-        # data_reader = myDataReader();
-        # users, activities, trackpoints = data_reader.read()
-        # program.count_all(table_name="User")
-        # program.count_all(table_name="Activity")
-        # program.count_all(table_name="TrackPoint")
-        # program.user_table(table_name="User")
-        # program.activity_table(table_name="Activity")
-        # program.trackpoint_table(table_name="TrackPoint")
-        # program.insert_data(table_name="User")
-        # _ = program.fetch_data(table_name="User")
-        # program.drop_table(table_name="User")
-        # program.drop_table(table_name="Activity")
-        # program.drop_table(table_name="TrackPoint")
-        # Check that the table is dropped
-        # program.show_tables()
+        program.drop_table(table_name="user")
+        program.drop_table(table_name="activity")
+        program.drop_table(table_name="trackpoint")
+        program.create_user_table(table_name="user")
+        program.create_activity_table(table_name="activity")
+        program.create_trackpoint_table(table_name="trackpoint")
+        data_reader = MyDataReader()
+        users, activities, trackpoints = data_reader.read()
+        print(activities)
+        program.insert_user_data(users)
+        program.insert_activity_data(activities)
+        # program.insert_trackpoint_data(trackpoints)
+        for i in range(20000, len(trackpoints), 20000):
+            print(str(100 * i / len(trackpoints)) + " %")
+            program.insert_trackpoint_data(trackpoints[i - 20000:i])
+        program.insert_trackpoint_data(trackpoints[i:])
+        _ = program.fetch_data(table_name="user")
     except Exception as e:
         print("ERROR: Failed to use database:", e)
     finally:
         if program:
             program.connection.close_connection()
+
+
+def main():
+    # build_database()
+    program = Program()
+    program.transportation_mode_users()
 
 
 if __name__ == '__main__':
