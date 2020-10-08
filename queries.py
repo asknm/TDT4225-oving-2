@@ -1,6 +1,7 @@
 from MyDataReader import MyDataReader
 from DbConnector import DbConnector
 from tabulate import tabulate
+from haversine import haversine, Unit
 
 
 class Program:
@@ -119,7 +120,12 @@ class Program:
 
     # 5
     def all_transportations(self):
-        query = """SELECT transportation_mode, count(transportation_mode) FROM activity WHERE transportation_mode IS NOT NULL GROUP BY transportation_mode;"""
+        query = """
+        SELECT transportation_mode, count(transportation_mode)
+        FROM activity
+        WHERE transportation_mode IS NOT NULL
+        GROUP BY transportation_mode;
+        """
         self.cursor.execute(query)
         res = self.cursor.fetchall()
         print("Transportation modes and counts:")
@@ -127,12 +133,33 @@ class Program:
 
     # 6
     def most_active_year(self):
-        query = """SELECT LEFT(..., 4) AS INT FROM activity ORDER BY ... COUNT(*) DESC limit 1;"""
+        query = ""
+
+    # 7
+    def user_112_distance_walked_2008(self):
+        query = """
+        SELECT t.activity_id, t.lat, t.lon, t.altitude
+        FROM trackpoint AS t
+        INNER JOIN activity AS a ON t.activity_id=a.id
+        WHERE YEAR(a.start_date_time) = 2008
+        AND a.user_id = '112'
+        AND a.transportation_mode = 'walk'
+        ORDER BY t.activity_id;
+        """
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        distance = 0.0
+        for i, l in enumerate(res):
+            if i > 0 and l[0] == res[i-1][0]:
+                distance += haversine((l[1], l[2]), (res[i-1][1], res[i-1][2]))
+        print("Total distance:")
+        print(distance)
+
 
 def main():
     try:
         program = Program()
-        program.all_transportations()
+        program.user_112_distance_walked_2008()
 
         # data_reader = myDataReader();
         # users, activities, trackpoints = data_reader.read()
